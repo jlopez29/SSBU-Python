@@ -1,5 +1,11 @@
 import json
 import requests
+import os
+ 
+dirpath = os.getcwd()
+
+with open(dirpath + '/ssbu_scripts/scripts/series.json') as jfile:
+    series = json.loads(jfile.read())
 
 keyList = {'Back Aerial',
         'Back Throw',
@@ -72,8 +78,12 @@ def findTier(dictionary,charId):
 def iterate(dictionary,dataOut,moveList,featureList,advObj):
     for key, value in dictionary.items():
 
-        if(key != 'featured_moves' and key != 'move_set' and key != 'attribute_ratings' and key != 'key' and key != 'portrait_image' and key != 'primary_fighting_style' and key != 'secondary_fighting_style' and key != 'advantages' and key != 'disadvantages' and key != 'thumbnail_image' and key != 'series_image'):
+        if(key != 'id' and key != 'featured_moves' and key != 'move_set' and key != 'attribute_ratings' and key != 'key' and key != 'portrait_image' and key != 'primary_fighting_style' and key != 'secondary_fighting_style' and key != 'advantages' and key != 'disadvantages' and key != 'thumbnail_image' and key != 'series_image'):
             dataOut[key] = value
+            if(key == 'name'):
+                dataOut['series'] = series[value]
+        elif(key == 'id'):
+            dataOut['_id'] = value
         elif(key == 'attribute_ratings'):
             attrs = {}
             attrs['damage'] = value['Damage'] * 2
@@ -83,8 +93,7 @@ def iterate(dictionary,dataOut,moveList,featureList,advObj):
             attrs['neutral'] = value['Neutral'] * 2
             attrs['weight'] = value['Weight'] * 2
             attrs['recovery'] = value['Recovery'] * 2
-
-            attrs['overall'] = (((attrs['damage']+attrs['kill_power']+attrs['defense']+attrs['speed']+attrs['neutral']+attrs['weight']+attrs['recovery'])/ 70) * 100)
+            dataOut['overall'] = round((((attrs['damage']+attrs['kill_power']+attrs['defense']+attrs['speed']+attrs['neutral']+attrs['weight']+attrs['recovery'])/ 70) * 100),2)
 
             dataOut['attributes'] = attrs
         elif(key == 'advantages' or key == 'disadvantages'):
@@ -133,6 +142,7 @@ def getData():
         stringy = 'https://www.proguides.com/api/v2/game-resources/super-smash-bros-ultimate/static-data/characters/by-key/{0}'.format(char)
         data = json.loads(requests.get(stringy).content)
         # print(data)
+
         iterate(data,dataOut,moveList,featureList,advObj)
         getMoves(data['move_set'],dataOut,moveList,featureList,advObj)
 
